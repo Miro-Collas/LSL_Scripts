@@ -219,7 +219,7 @@ default
 
     changed(integer change)
     {
-        if (change & (CHANGED_LINK | CHANGED_INVENTORY | CHANGED_OWNER))
+        if (change & (CHANGED_LINK | CHANGED_INVENTORY))
             llResetScript();
     }
 
