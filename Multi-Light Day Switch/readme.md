@@ -19,6 +19,7 @@ Light info should be specified in the lights.config notecard. Edit this as neede
 Format for lights.config notecard:
 - lines starting with # are treated as comments and ignored when parsing
 - each non-comment line MUST start with with a keyword, followed by a = and then parameters. These are:
+- autodaynightswitch: if this is set to FALSE, lights will not toggle on/off when day changes to night (and vice versa). If this isn't present in the config notecard, it defaults to TRUE
 - toggletimer: how often to check whether day has changed to night, or vice versa, in seconds. Shouldn't be too low, so as not to be checking too often. If this keyword isn't present in the notecard, it defaults to 60secs
 - delay: pause between turning lights on/off, in seconds, to add some "realism". Defaults to 0 (no delay).
 - light=integer link_num, vector linear_color, float intensity, float radius, float falloff
@@ -75,3 +76,6 @@ v2.1 - 2025-08-21
 - Minor code clean-up.
 - First public release.
 
+v3.0
+- stop resetting on owner change; no need for it
+- added command (autodaynightswitch) to allow day/night switching to be turned off
