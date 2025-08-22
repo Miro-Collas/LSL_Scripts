@@ -36,6 +36,19 @@
 // Max delay between lights switching on/off
 #define DELAY 0.0
 
+// Duration of "long touch" in seconds
+#define LONG_TOUCH 2.0
+
+// touch permissions
+#define TOUCH_PERM_OWNER 1
+#define TOUCH_PERM_GROUP 2
+#define TOUCH_PERM_ANYONE 3
+
+// Duialog channel
+#define DIALOG_LISTEN_CHANNEL -8420
+// Dialog timeout, in seconds
+#define DIALOG_TIMEOUT 60.0
+
 // Keywords recognised:
 #define TAG_LIGHT "light="
 #define TAG_GLOW "glow="
@@ -51,6 +64,12 @@
 #define STR_MISSING_NOTECARD "No config notecard found; abort."
 #define STR_LOADING_NOTECARD "Loading notecard..."
 #define STR_NOTECARD_LOADED "Finished reading notecard."
+#define STR_DIALOG_TEXT "Select permissions for touch:"
+#define STR_OWNER "Owner"
+#define STR_GROUP "Group"
+#define STR_ANYONE "Anyone"
+#define STR_CANCEL "[Cancel]"
+#define STR_DIALOG_TIMEOUT "Dialog timed out."
 
 // Simple replacements for leggibility
 #define PARAM_LINKNUM llList2Integer(temp_list, 0)
@@ -76,11 +95,15 @@ list lGlows;
 list lFullBright;
 list lProjectors;
 
-// delays, timers
+// delays, timers from notecard
 float toggle_timer;
 float delay;
 integer autodaynightswitch;
 
+// Tocuh permissions
+integer touch_perm;
+
+// Misc
 integer done_processing;
 integer iNoteCardLine;
 key     kCurrentDataRequest;
@@ -88,6 +111,7 @@ integer switch;
 integer day;
 integer dayLast;
 vector  sunDirection;
+integer listen_handle;
 
 // *********************************************************
 // Extract value from config notecard line
@@ -193,6 +217,8 @@ default
         toggle_timer = TIMER;
         delay = DELAY;
         autodaynightswitch = TRUE;
+        touch_perm = TOUCH_PERM_ANYONE;
+        listen_handle = 0;
  
         lLights = [];
         lGlows = [];
@@ -298,29 +324,92 @@ default
     
     timer()
     {
-        llSetTimerEvent(toggle_timer);
-        sunDirection = llGetSunDirection();
-        dayLast = day;
-        if (sunDirection.z <= 0)
-            day = 0;
+        // We came here due to a dialog being opened,
+        // and it has timed out
+        if(listen_handle != 0)
+        {
+            llListenRemove(listen_handle);
+            listen_handle = 0;
+            llSay(0, STR_DIALOG_TIMEOUT);
+            if(autodaynightswitch)
+                llSetTimerEvent(toggle_timer);
+        }
+        // Otherwise, we're checking for day/night transitions
         else
-            day = 1;
-        if(dayLast == day)
-            return;
-        else {
-            if ((!day & !switch) || (day && switch))
+        {
+            llSetTimerEvent(toggle_timer);
+            sunDirection = llGetSunDirection();
+            dayLast = day;
+            if (sunDirection.z <= 0)
+                day = 0;
+            else
+                day = 1;
+            if(dayLast == day)
+                return;
+            else
+            {
+                if ((!day & !switch) || (day && switch))
                 switch = !switch;
-        }        
-        lightToggle(switch);
+            }        
+            lightToggle(switch);
+        }
     }
 
     touch_start(integer total_number) 
     {
+        llResetTime();
+    }
+    
+    touch_end(integer num_detected)
+    {
         // Ignore if NC still being read
-        if(done_processing)
+        if(!done_processing)
+            return;
+
+        // get info on who touched
+        key k = llDetectedKey(0);
+        integer g = llSameGroup(k);
+
+        if(llGetTime() >= LONG_TOUCH)
+        {
+            // Display menu for touch permissions
+            listen_handle = llListen(DIALOG_LISTEN_CHANNEL, "", llGetOwner(), "");
+            llSetTimerEvent(DIALOG_TIMEOUT);
+            llDialog(k, STR_DIALOG_TEXT, [" ", STR_CANCEL, " ", " ", " ", " ", " ", " ", " ", STR_OWNER, STR_GROUP, STR_ANYONE], DIALOG_LISTEN_CHANNEL);
+            return;
+        }
+
+        // Only allow touch if permissions allow it
+        if((touch_perm == TOUCH_PERM_ANYONE) || 
+            ((touch_perm == TOUCH_PERM_GROUP) && g) || ((k == llGetOwner())) || 
+            ((touch_perm == TOUCH_PERM_OWNER) && (k == llGetOwner())))
         {
             switch = !switch;
             lightToggle(switch);
+        }
+    }
+    
+    listen(integer channel, string name, key id, string message)
+    {
+        llListenRemove(listen_handle);
+        listen_handle = 0;
+        // Restart regular timer, unless it is turned off
+        if(autodaynightswitch)
+            llSetTimerEvent(toggle_timer);
+        else
+            llSetTimerEvent(0.0);
+        
+        if(message == STR_OWNER)
+        {
+            touch_perm = TOUCH_PERM_OWNER;
+        }
+        else if(message == STR_GROUP)
+        {
+            touch_perm = TOUCH_PERM_GROUP;
+        }
+        else if(message == STR_ANYONE)
+        {
+            touch_perm = TOUCH_PERM_ANYONE;
         }
     }
 }
