@@ -4,6 +4,8 @@ This is a free and open source script, under a CC0 license:
 https://creativecommons.org/public-domain/cc0/
 That means that if you paid for this script, you were scammed; if you're reselling it, may the fleas of a thousand camels infest your armpits.
 
+Source is also on https://github.com/Miro-Collas/LSL_Scripts/tree/main/Multi-Light%20Day%20Switch
+
 HOW TO USE
 
 This script serves to control multiple lights, linked together, from a single script. Lights will turn on at nightfall, and off at the start of the day. They will also toggle their state on touch, staying that way until the next day/night change.
