@@ -10,6 +10,8 @@ HOW TO USE
 
 This script serves to control multiple lights, linked together, from a single script. Lights will turn on at nightfall, and off at the start of the day. They will also toggle their state on touch, staying that way until the next day/night change.
 
+If you left click and hold for more than 2 seconds, you'll get a dialog which allows you to select permissions for touch access: owner only, group or anyone. (Selecting Group will always allow the owner to access.)
+
 Naturally, any lights you want to add this to, need to be moddable. If you like, you can use one script for each light, without linking them. However, fewer scripts means reduced region lag. It may not make much difference, but every bit helps.
 
 You should remove all scripts in the lights before starting, so that they don't conflict with this one. Therefore, I *strongly* suggest working on a copy of the lights to make sure you get all the data right, before adding the notecard and script to your placed lights.
@@ -79,3 +81,5 @@ v2.1 - 2025-08-21
 v3.0
 - stop resetting on owner change; no need for it
 - added command (autodaynightswitch) to allow day/night switching to be turned off
+- on long touch (more than 2secs), bring up dialog where touch permissions can be set
+
