@@ -43,6 +43,7 @@
 #define TAG_PROJECTOR "projector="
 #define TAG_TOGGLE_TIMER "toggletimer="
 #define TAG_DELAY "delay="
+#define TAG_AUTO_DAY_NIGHT_SWITCH "autodaynightswitch="
 
 #define SEPARATOR "="
 
@@ -78,6 +79,7 @@ list lProjectors;
 // delays, timers
 float toggle_timer;
 float delay;
+integer autodaynightswitch;
 
 integer done_processing;
 integer iNoteCardLine;
@@ -190,6 +192,7 @@ default
         done_processing = FALSE;
         toggle_timer = TIMER;
         delay = DELAY;
+        autodaynightswitch = TRUE;
  
         lLights = [];
         lGlows = [];
@@ -261,6 +264,11 @@ default
                 {
                     delay += (float)GetValue(sData);
                 }
+                
+                else if(llSubStringIndex(llToLower(sData), llToLower(TAG_AUTO_DAY_NIGHT_SWITCH)) > -1)
+                {
+                    autodaynightswitch = (integer)GetValue(sData);
+                }
 
             }
  
@@ -271,16 +279,20 @@ default
             // Start main loop
             llOwnerSay(STR_NOTECARD_LOADED);
             switch = FALSE;
-            sunDirection = llGetSunDirection();
-            if (sunDirection.z <= 0)
-                day = 0;
-            else
-                day = 1;
-            if(!day)
-                switch = TRUE;
-            lightToggle(switch);
-            done_processing = TRUE;
-            llSetTimerEvent(0.1);
+            // This only needed if auto day/night is enabled
+            if(autodaynightswitch)
+            {
+                sunDirection = llGetSunDirection();
+                if (sunDirection.z <= 0)
+                    day = 0;
+                else
+                    day = 1;
+                if(!day)
+                    switch = TRUE;
+                lightToggle(switch);
+                done_processing = TRUE;
+                llSetTimerEvent(0.1);
+            }
         }
     }
     
